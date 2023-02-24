@@ -5,6 +5,9 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
+/**
+ * 컨트롤러와 서비스 간에 데이터를 주고받는 데 최적화된 dto
+ */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -24,6 +27,7 @@ public class AccountDto { // 엔티티 클래스와 비슷한데 단순화된 �
                 .accountNumber(account.getAccountNumber())
                 .registeredAt(account.getRegisteredAt())
                 .unRegisteredAt(account.getUnRegisteredAt())
+                .balance(account.getBalance())
                 .build();
     }
 }
