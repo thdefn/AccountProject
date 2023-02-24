@@ -1,5 +1,6 @@
 package com.example.account.domain;
 
+import com.example.account.type.AccountStatus;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -29,7 +30,7 @@ public class Account {
     private Long balance;
 
     private LocalDateTime registeredAt;
-    private LocalDateTime unregisteredAt;
+    private LocalDateTime unRegisteredAt;
 
     @CreatedDate
     private LocalDateTime createdAt;
