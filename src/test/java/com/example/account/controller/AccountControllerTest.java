@@ -2,6 +2,7 @@ package com.example.account.controller;
 
 import com.example.account.dto.AccountDto;
 import com.example.account.dto.CreateAccount;
+import com.example.account.dto.DeleteAccount;
 import com.example.account.service.AccountService;
 import com.example.account.service.RedisTestService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,7 +16,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDateTime;
 
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -47,7 +50,8 @@ class AccountControllerTest {
                         .accountNumber("1234567890")
                         .registeredAt(LocalDateTime.now())
                         .unRegisteredAt(LocalDateTime.now()) //실제 서비스와 동일하게 리턴하도록 unRegisteredAt도 담아줌
-                        .build());
+                        .build()
+                );
         //when
         //then
         mockMvc.perform(post("/account")
@@ -59,6 +63,34 @@ class AccountControllerTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userId").value(123))
-                .andExpect(jsonPath("$.accountNumber").value(1234567890));
+                .andExpect(jsonPath("$.accountNumber").value("1234567890"));
+    }
+
+    @Test
+    void deleteAccountSuccess() throws Exception {
+        //given
+        LocalDateTime current = LocalDateTime.now();
+        //delete account에 대한 mocking
+        given(accountService.deleteAccount(anyLong(), anyString()))
+                .willReturn(AccountDto.builder()
+                        .userId(23L)
+                        .accountNumber("1234567890")
+                        .registeredAt(current)
+                        .unRegisteredAt(current)
+                        .build()
+                );
+        //when
+        //then
+        mockMvc.perform(delete("/account")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(
+                        new DeleteAccount.Request(1L,"임의의열자리계좌번호")
+                ))
+        )
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.userId").value(23))
+                .andExpect(jsonPath("$.accountNumber").value("1234567890"))
+                .andExpect(jsonPath("$.unRegisteredAt").value(current.toString()));
     }
 }

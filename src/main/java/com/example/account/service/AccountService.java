@@ -80,6 +80,8 @@ public class AccountService {
         account.setAccountStatus(AccountStatus.UNREGISTERED);
         account.setUnRegisteredAt(LocalDateTime.now());
 
+        accountRepository.save(account); //안티패턴임 없어도 업데이트 되지만 테스트시 확인용으로, 불필요한 코드가 들어가더라도 테스트가 중요
+
         return AccountDto.fromEntity(account);
     }
 
