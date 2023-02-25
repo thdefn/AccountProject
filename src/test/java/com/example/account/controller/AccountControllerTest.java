@@ -3,8 +3,10 @@ package com.example.account.controller;
 import com.example.account.dto.AccountDto;
 import com.example.account.dto.CreateAccount;
 import com.example.account.dto.DeleteAccount;
+import com.example.account.exception.AccountException;
 import com.example.account.service.AccountService;
 import com.example.account.service.RedisTestService;
+import com.example.account.type.ErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,6 +67,25 @@ class AccountControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userId").value(123))
                 .andExpect(jsonPath("$.accountNumber").value("1234567890"));
+    }
+
+    @Test
+    void FailCreateAccount() throws Exception {
+        //given
+        given(accountService.createAccount(anyLong(), anyLong()))
+                .willThrow(new AccountException(ErrorCode.USER_NOT_FOUND));
+        //when
+        //then
+        mockMvc.perform(post("/account")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new CreateAccount.Request(1L, 100L) // request는 어떤 값이어도 상관 없음
+                        ))
+                )
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.errorCode").value("USER_NOT_FOUND"))
+                .andExpect(jsonPath("$.errorMessage").value("사용자가 없습니다."));
     }
 
     @Test

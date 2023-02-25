@@ -23,6 +23,7 @@ public class AccountController {
     public CreateAccount.Response createAccount(
             @RequestBody @Valid CreateAccount.Request request
     ) {
+        //현재는 에러가 그저 컨트롤러 밖으로 던져지고 그냥 알수없는 에러로 끝나버림
         return CreateAccount.Response.from(
                 accountService.createAccount(
                         request.getUserId(),
