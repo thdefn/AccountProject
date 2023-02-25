@@ -70,14 +70,13 @@ class AccountControllerTest {
     @Test
     void SuccessDeleteAccount() throws Exception {
         //given
-        LocalDateTime current = LocalDateTime.now();
         //delete account에 대한 mocking
         given(accountService.deleteAccount(anyLong(), anyString()))
                 .willReturn(AccountDto.builder()
                         .userId(23L)
                         .accountNumber("1234567890")
-                        .registeredAt(current)
-                        .unRegisteredAt(current)
+                        .registeredAt(LocalDateTime.now())
+                        .unRegisteredAt(LocalDateTime.of(1999,8,14,9,18, 12))
                         .build()
                 );
         //when
@@ -92,7 +91,8 @@ class AccountControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userId").value(23))
                 .andExpect(jsonPath("$.accountNumber").value("1234567890"))
-                .andExpect(jsonPath("$.unRegisteredAt").value(current.toString()));
+                .andExpect(jsonPath("$.unRegisteredAt")
+                        .value(LocalDateTime.of(1999,8,14,9,18, 12).toString()));
     }
 
     @Test

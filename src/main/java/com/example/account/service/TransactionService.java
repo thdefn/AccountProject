@@ -142,4 +142,11 @@ public class TransactionService {
 
         saveAndGetTransaction(CANCEL, F, account, amount);
     }
+
+    public TransactionDto queryTransaction(String transactionId) {
+        return TransactionDto.fromEntity( //일회용 변수는 넣지말자
+                transactionRepository.findByTransactionId(transactionId)
+                        .orElseThrow(() -> new TransactionException(TRANSACTION_NOT_FOUND))
+        );
+    }
 }

@@ -523,4 +523,50 @@ class TransactionServiceTest {
         assertEquals(ErrorCode.ACCOUNT_NOT_FOUND,exception.getErrorCode());
     }
 
+    @Test
+    void successQueryTransaction() {
+        //given
+        Account account = Account.builder()
+                .accountNumber("123456778")
+                .id(12L)
+                .accountStatus(AccountStatus.IN_USE)
+                .balance(200000L)
+                .build();
+
+        //과거에 썼던 내역
+        given(transactionRepository.findByTransactionId(anyString()))
+                .willReturn(Optional.of(
+                        Transaction.builder()
+                                .transactionType(USE)
+                                .transactionResultType(S)
+                                .account(account)
+                                .amount(15000L)
+                                .balanceSnapshot(18000L)
+                                .transactionId("usedtransaction")
+                                .transactedAt(LocalDateTime.now().minusYears(1).minusDays(1))
+                                .build()
+                ));
+        //when
+        TransactionDto transactionDto = transactionService.queryTransaction("abcd");
+        //then
+        assertEquals(USE, transactionDto.getTransactionType());
+        assertEquals(S, transactionDto.getTransactionResultType());
+        assertEquals("123456778", transactionDto.getAccountNumber());
+        assertEquals("usedtransaction", transactionDto.getTransactionId());
+        assertEquals(18000L, transactionDto.getBalanceSnapshot());
+    }
+
+    @Test
+    @DisplayName("원 사용 거래 없음 - 거래 조회 실패")
+    void failedQueryTransaction_TransactionNotFound() {
+        //given
+        given(transactionRepository.findByTransactionId(anyString()))
+                .willReturn(Optional.empty());
+        //when
+        TransactionException exception = assertThrows(TransactionException.class,
+                ()->transactionService.queryTransaction("abcd"));
+        //then
+        assertEquals(ErrorCode.TRANSACTION_NOT_FOUND, exception.getErrorCode());
+    }
+
 }
