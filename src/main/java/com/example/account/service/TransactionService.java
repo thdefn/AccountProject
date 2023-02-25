@@ -9,7 +9,6 @@ import com.example.account.repository.AccountRepository;
 import com.example.account.repository.AccountUserRepository;
 import com.example.account.repository.TransactionRepository;
 import com.example.account.type.AccountStatus;
-import com.example.account.type.ErrorCode;
 import com.example.account.type.TransactionResultType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
