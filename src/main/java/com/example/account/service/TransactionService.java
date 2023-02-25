@@ -5,11 +5,13 @@ import com.example.account.domain.AccountUser;
 import com.example.account.domain.Transaction;
 import com.example.account.dto.TransactionDto;
 import com.example.account.exception.AccountException;
+import com.example.account.exception.TransactionException;
 import com.example.account.repository.AccountRepository;
 import com.example.account.repository.AccountUserRepository;
 import com.example.account.repository.TransactionRepository;
 import com.example.account.type.AccountStatus;
 import com.example.account.type.TransactionResultType;
+import com.example.account.type.TransactionType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,6 +24,7 @@ import java.util.UUID;
 import static com.example.account.type.ErrorCode.*;
 import static com.example.account.type.TransactionResultType.F;
 import static com.example.account.type.TransactionResultType.S;
+import static com.example.account.type.TransactionType.CANCEL;
 import static com.example.account.type.TransactionType.USE;
 
 @Slf4j
@@ -37,7 +40,8 @@ public class TransactionService {
      * 계좌가 이미 해지 상태인 경우, 거래 금액이 잔액보다 큰 경우
      * 거래 금액이 너무 작거나 큰 경우 실패 응답
      */
-    @Transactional // 1. 2. 는 동시에 일어나거나 둘 다 일어나지 않거나 서비스 쪽에 있는 코드들은 기본적으로 Transactional을 달아주자
+    @Transactional
+    // 1. 2. 는 동시에 일어나거나 둘 다 일어나지 않거나 서비스 쪽에 있는 코드들은 기본적으로 Transactional을 달아주자
     public TransactionDto useBalance(Long userId, String accountNumber, Long amount) {
         AccountUser user = accountUserRepository.findById(userId)
                 .orElseThrow(() -> new AccountException(USER_NOT_FOUND));
@@ -52,7 +56,7 @@ public class TransactionService {
 
         // 2. transaction 테이블에 insert
         return TransactionDto.fromEntity(
-                saveAndGetTransaction(S, account, amount)
+                saveAndGetTransaction(USE, S, account, amount)
         );
     }
 
@@ -73,19 +77,21 @@ public class TransactionService {
     @Transactional
     public void saveFailedUseTransaction(String accountNumber, Long amount) {
         Account account = accountRepository.findByAccountNumber(accountNumber)
-                .orElseThrow(()->new AccountException(ACCOUNT_NOT_FOUND));
+                .orElseThrow(() -> new AccountException(ACCOUNT_NOT_FOUND));
 
-        saveAndGetTransaction(F, account, amount);
+        saveAndGetTransaction(USE, F, account, amount);
     }
 
     //코드 중복 최소화하면서 저장하는 부분 공통화
     private Transaction saveAndGetTransaction(
+            TransactionType transactionType,
             TransactionResultType transactionResultType,
             Account account,
-            Long amount) {
+            Long amount
+    ) {
         return transactionRepository.save(
                 Transaction.builder()
-                        .transactionType(USE)
+                        .transactionType(transactionType)
                         .transactionResultType(transactionResultType)
                         .account(account)
                         .amount(amount)
@@ -94,5 +100,46 @@ public class TransactionService {
                         .transactedAt(LocalDateTime.now())
                         .build()
         );
+    }
+
+    @Transactional
+    public TransactionDto cancleBalance(
+            String transactionId,
+            String accountNumber,
+            Long amount
+    ) {
+        Transaction transaction = transactionRepository.findByTransactionId(transactionId)
+                .orElseThrow(() -> new TransactionException(TRANSACTION_NOT_FOUND));
+
+        Account account = accountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new AccountException(ACCOUNT_NOT_FOUND));
+
+        validateCancleBalance(transaction, account, amount);
+
+        account.cancleBalance(amount);
+
+        return TransactionDto.fromEntity(
+                saveAndGetTransaction(CANCEL, S, account, amount)
+        );
+    }
+
+    private void validateCancleBalance(Transaction transaction, Account account, Long amount) {
+        if (!Objects.equals(transaction.getAccount().getId(), account.getId())) {
+            throw new AccountException(TRANSACTION_ACCOUNT_UNMATCH);
+        }
+        if (!Objects.equals(transaction.getAmount(), amount)) {
+            throw new TransactionException(CANCLE_MUST_FULLY);
+        }
+        if (transaction.getTransactedAt().isBefore(LocalDateTime.now().minusYears(1))) {
+            throw new TransactionException(TOO_OLD_ORDER_TO_CANCLE);
+        }
+    }
+
+    @Transactional
+    public void saveFailedCancleTransaction(String accountNumber, Long amount) {
+        Account account = accountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new AccountException(ACCOUNT_NOT_FOUND));
+
+        saveAndGetTransaction(CANCEL, F, account, amount);
     }
 }

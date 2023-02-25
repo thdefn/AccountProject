@@ -1,5 +1,6 @@
 package com.example.account.controller;
 
+import com.example.account.dto.CancleBalance;
 import com.example.account.dto.TransactionDto;
 import com.example.account.dto.UseBalance;
 import com.example.account.service.TransactionService;
@@ -53,6 +54,36 @@ class TransactionControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
                                 new UseBalance.Request(2L, "임의의계좌번호열자리", 100L)
+                        )))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accountNumber").value("1234567890"))
+                .andExpect(jsonPath("$.transactionResult").value("S"))
+                .andExpect(jsonPath("$.transactionId").value("abcdefghijklmnthisisuuidrandomuuid"))
+                .andExpect(jsonPath("$.amount").value(10))
+                .andExpect(jsonPath("$.transactedAt").value(
+                        LocalDateTime.of(1999,8,14,9,18, 12).toString()));
+    }
+
+    @Test
+    void successCancleBalance() throws Exception {
+        //given
+        given(transactionService.cancleBalance(anyString(), anyString(), anyLong()))
+                .willReturn(TransactionDto.builder()
+                        .accountNumber("1234567890")
+                        .transactionType(TransactionType.CANCEL)
+                        .transactionResultType(S)
+                        .amount(10L)
+                        .balanceSnapshot(990L)
+                        .transactionId("abcdefghijklmnthisisuuidrandomuuid")
+                        .transactedAt(LocalDateTime.of(1999,8,14,9,18, 12))
+                        .build());
+        //when
+        //then
+        mockMvc.perform(post("/transaction/cancle")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new CancleBalance.Request("uuidrandomuuid", "임의의계좌번호열자리", 100L)
                         )))
                 .andDo(print())
                 .andExpect(status().isOk())
