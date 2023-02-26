@@ -3,26 +3,25 @@ package com.example.account.domain;
 import com.example.account.exception.AccountException;
 import com.example.account.type.AccountStatus;
 import com.example.account.type.ErrorCode;
-import lombok.*;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
-import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.ManyToOne;
 import java.time.LocalDateTime;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@SuperBuilder
 @Entity
-@EntityListeners(AuditingEntityListener.class) // config 가 필요함
-public class Account {
-    @Id
-    @GeneratedValue
-    private Long id;
-
+public class Account extends BaseEntity{
     @ManyToOne
     private AccountUser accountUser; // User는 시스템 유저 테이블과 충돌할 수 있음
     private String accountNumber;
@@ -32,12 +31,8 @@ public class Account {
     private Long balance;
 
     private LocalDateTime registeredAt;
-    private LocalDateTime unRegisteredAt;
 
-    @CreatedDate
-    private LocalDateTime createdAt;
-    @LastModifiedDate
-    private LocalDateTime updatedAt;
+    private LocalDateTime unRegisteredAt;
 
     public void useBalance(Long amount){
         if(amount > balance){
