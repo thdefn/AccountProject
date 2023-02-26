@@ -1,5 +1,6 @@
 package com.example.account.dto;
 
+import com.example.account.aop.AccountLockIdInterface;
 import com.example.account.type.TransactionResultType;
 import lombok.*;
 
@@ -7,10 +8,10 @@ import javax.validation.constraints.*;
 import java.time.LocalDateTime;
 
 public class UseBalance {
-    @Getter
+    @Getter // AccountLockIdInterface 의 getAccountNumber() 를 구현해줌
     @Setter
     @AllArgsConstructor
-    public static class Request { //이너 클래스 활용
+    public static class Request implements AccountLockIdInterface { //이너 클래스 활용
        @NotNull
        @Min(1)
        private Long userId;

@@ -5,7 +5,6 @@ import com.example.account.dto.CreateAccount;
 import com.example.account.dto.DeleteAccount;
 import com.example.account.exception.AccountException;
 import com.example.account.service.AccountService;
-import com.example.account.service.RedisTestService;
 import com.example.account.type.ErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -34,9 +33,6 @@ class AccountControllerTest {
     // mock bean들이 AccountController 안으로 주입됨 -> 주입된 애플리케이션 상대로 mockMvc가 요청을 안쪽으로 날려서 테스트
     @MockBean
     private AccountService accountService;
-
-    @MockBean
-    private RedisTestService redisTestService;
 
     @Autowired
     private MockMvc mockMvc; // 테스트 컨테이너 안에 자동으로 생성되어 주입받을 수 있음
@@ -97,23 +93,23 @@ class AccountControllerTest {
                         .userId(23L)
                         .accountNumber("1234567890")
                         .registeredAt(LocalDateTime.now())
-                        .unRegisteredAt(LocalDateTime.of(1999,8,14,9,18, 12))
+                        .unRegisteredAt(LocalDateTime.of(1999, 8, 14, 9, 18, 12))
                         .build()
                 );
         //when
         //then
         mockMvc.perform(delete("/account")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(
-                        new DeleteAccount.Request(1L,"임의의열자리계좌번호")
-                ))
-        )
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new DeleteAccount.Request(1L, "임의의열자리계좌번호")
+                        ))
+                )
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userId").value(23))
                 .andExpect(jsonPath("$.accountNumber").value("1234567890"))
                 .andExpect(jsonPath("$.unRegisteredAt")
-                        .value(LocalDateTime.of(1999,8,14,9,18, 12).toString()));
+                        .value(LocalDateTime.of(1999, 8, 14, 9, 18, 12).toString()));
     }
 
     @Test
@@ -130,7 +126,7 @@ class AccountControllerTest {
                         AccountDto.builder()
                                 .accountNumber("2222222222")
                                 .balance(3000L).build()
-                        );
+                );
 
         given(accountService.getAccountsByUserId(anyLong()))
                 .willReturn(accountDtos);
